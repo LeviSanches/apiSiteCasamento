@@ -22,7 +22,8 @@ public class ProductRepositoryAdapter implements ProductRepositoryOutputPort {
 
     @Override
     public List<ProductEntity> buscarTodos() {
-        return productRepository.findAll();
+        //return productRepository.findAll();
+        return productRepository.findAllGroupByName();
     }
 
     @Transactional

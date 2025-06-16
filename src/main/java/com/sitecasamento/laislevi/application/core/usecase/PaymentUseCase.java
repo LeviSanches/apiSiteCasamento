@@ -25,8 +25,12 @@ public class PaymentUseCase implements PaymentInputPort {
 
     @Value("${mercado-pago.api-token}")
     private String tokenApi;
-    @Value("${mercado-pago.urls.url-retorno}")
-    private String urlRetorno;
+    @Value("${mercado-pago.urls.url-success}")
+    private String urlsuccess;
+    @Value("${mercado-pago.urls.url-pending}")
+    private String urlpending;
+    @Value("${mercado-pago.urls.url-failure}")
+    private String urlfailure;
     private Long id;
     private String nome;
     private BigDecimal preco;
@@ -54,7 +58,8 @@ public class PaymentUseCase implements PaymentInputPort {
                     this.preco = BigDecimal.valueOf(p.getPreco());
                 });
 
-        PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
+        PreferenceItemRequest itemRequest =
+                PreferenceItemRequest.builder()
                 .id(id.toString())
                 .title(nome)
                 .pictureUrl(imagem)
@@ -69,16 +74,16 @@ public class PaymentUseCase implements PaymentInputPort {
 
         List<PreferencePaymentTypeRequest> excludedPaymentTypes = new ArrayList<>();
         excludedPaymentTypes.add(PreferencePaymentTypeRequest.builder().id("ticket").build());
-        excludedPaymentTypes.add(PreferencePaymentTypeRequest.builder().id("debit_card").build());
 
         List<PreferencePaymentMethodRequest> excludedPaymentMethods = new ArrayList<>();
         excludedPaymentMethods.add(PreferencePaymentMethodRequest.builder().id("pec").build());
 
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
+                .autoReturn("all")
                 .backUrls(PreferenceBackUrlsRequest.builder()
-                        .success(urlRetorno)
-                        .failure(urlRetorno)
-                        .pending(urlRetorno)
+                        .success(urlsuccess)
+                        .failure(urlfailure)
+                        .pending(urlpending)
                         .build())
                 .differentialPricing(PreferenceDifferentialPricingRequest.builder()
                         .id(1L)
@@ -95,7 +100,6 @@ public class PaymentUseCase implements PaymentInputPort {
                                 .build())
                         .build())
                 .additionalInfo(paymentDTO.getMensagem())
-                .autoReturn("all")
                 .binaryMode(true)
                 .marketplace("marketplace")
                 .operationType("regular_payment")
