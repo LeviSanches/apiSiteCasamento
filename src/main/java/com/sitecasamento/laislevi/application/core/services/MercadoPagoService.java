@@ -10,7 +10,7 @@ public class MercadoPagoService {
 
     @Value("${mercado-pago.urls.url-mercado-pago}")
     private String baseUrl;
-    @Value("${mercado-pago.api-token}")
+    @Value("${mercado-pago.api-token-prod}")
     private String token;
 
     private WebClient webClient;
@@ -26,6 +26,14 @@ public class MercadoPagoService {
     public String getPreference(String preferenceId) {
         return webClient.get()
             .uri("/checkout/preferences/" + preferenceId)
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
+    }
+
+    public String getPaymentInfo(String paymentId) {
+        return webClient.get()
+            .uri("/v1/payments/" + paymentId)
             .retrieve()
             .bodyToMono(String.class)
             .block();

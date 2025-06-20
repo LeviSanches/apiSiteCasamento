@@ -23,7 +23,7 @@ public class PaymentUseCase implements PaymentInputPort {
 
     private final ProductUseCase insertProductUseCase;
 
-    @Value("${mercado-pago.api-token}")
+    @Value("${mercado-pago.api-token-prod}")
     private String tokenApi;
     @Value("${mercado-pago.urls.url-success}")
     private String urlsuccess;
@@ -31,12 +31,6 @@ public class PaymentUseCase implements PaymentInputPort {
     private String urlpending;
     @Value("${mercado-pago.urls.url-failure}")
     private String urlfailure;
-    private Long id;
-    private String nome;
-    private BigDecimal preco;
-    private String categoria;
-    private String imagem;
-    private Integer quantidade;
 
     public PaymentUseCase(PaymentRepositoryOutputPort paymentRepositoryOutputPort, ProductUseCase insertProductUseCase) {
         this.paymentRepositoryOutputPort = paymentRepositoryOutputPort;
@@ -48,29 +42,22 @@ public class PaymentUseCase implements PaymentInputPort {
         MercadoPagoConfig.setAccessToken(tokenApi);
         PreferenceClient client = new PreferenceClient();
 
-        paymentDTO.getProdutos()
-                .forEach(p -> {
-                    this.id = p.getId();
-                    this.nome = p.getNome();
-                    this.imagem = p.getImagem();
-                    this.quantidade = Integer.valueOf(p.getQuantidade());
-                    this.categoria = p.getCategoria();
-                    this.preco = BigDecimal.valueOf(p.getPreco());
-                });
-
-        PreferenceItemRequest itemRequest =
-                PreferenceItemRequest.builder()
-                .id(id.toString())
-                .title(nome)
-                .pictureUrl(imagem)
-                .quantity(quantidade)
-                .currencyId("BRL")
-                .unitPrice(preco)
-                .categoryId(categoria)
-                .build();
-
         List<PreferenceItemRequest> items = new ArrayList<>();
-        items.add(itemRequest);
+
+        paymentDTO.getProdutos().forEach(
+                p -> {
+                    PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
+                            .id(p.getId().toString())
+                            .title(p.getNome())
+                            .pictureUrl(p.getImagem())
+                            .quantity(Integer.valueOf(p.getQuantidade()))
+                            .currencyId("BRL")
+                            .unitPrice(BigDecimal.valueOf(p.getPreco()))
+                            .categoryId(p.getCategoria())
+                            .build();
+                    items.add(itemRequest);
+                }
+        );
 
         List<PreferencePaymentTypeRequest> excludedPaymentTypes = new ArrayList<>();
         excludedPaymentTypes.add(PreferencePaymentTypeRequest.builder().id("ticket").build());
@@ -135,9 +122,10 @@ public class PaymentUseCase implements PaymentInputPort {
             var idProduto = paymentDTO.getProdutos();
             idProduto
                     .forEach(p -> {
-                        if (p.getId() != null && p.getPreco() > 500) {
+                        if (p.getId() != null) {
                             insertProductUseCase.atualizarDisponibilidadeProduto(p.getId());
                         }
+
                     });
             return;
         }
