@@ -16,8 +16,11 @@ import org.springframework.beans.factory.annotation.Value;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class PaymentUseCase implements PaymentInputPort {
+
+    private static final Logger logger = Logger.getLogger(PaymentUseCase.class.getName());
 
     private final PaymentRepositoryOutputPort paymentRepositoryOutputPort;
 
@@ -75,6 +78,7 @@ public class PaymentUseCase implements PaymentInputPort {
                 .differentialPricing(PreferenceDifferentialPricingRequest.builder()
                         .id(1L)
                         .build())
+                .externalReference(items.get(0).getId())
                 .expires(false)
                 .items(items)
                 .marketplaceFee(new BigDecimal("0"))
@@ -94,7 +98,7 @@ public class PaymentUseCase implements PaymentInputPort {
                         .defaultPaymentMethodId("master")
                         .excludedPaymentTypes(excludedPaymentTypes)
                         .excludedPaymentMethods(excludedPaymentMethods)
-                        .installments(5)
+                        .installments(12)
                         .defaultInstallments(1)
                         .build())
 
@@ -107,9 +111,8 @@ public class PaymentUseCase implements PaymentInputPort {
             System.out.println("Erro: InitPoint está nulo");
         }
 
-        System.out.println("Link para pagamento: " + preference.getInitPoint());
-        System.out.println("Link para teste_sandbox " + preference.getSandboxInitPoint());
-        System.out.println("Id: " + preference.getId());
+        logger.info("Link para pagamento: "+ preference.getInitPoint());
+        logger.info("preferenceId: "+ preference.getId());
 
         return preference.getInitPoint();
 
@@ -118,6 +121,7 @@ public class PaymentUseCase implements PaymentInputPort {
     @Override
     public void inserirPagamento(PaymentDTO paymentDTO) {
         if (paymentDTO != null) {
+            logger.info("salvando pagamento...");
             paymentRepositoryOutputPort.salvar(new PaymentEntity(paymentDTO));
             var idProduto = paymentDTO.getProdutos();
             idProduto
@@ -129,6 +133,7 @@ public class PaymentUseCase implements PaymentInputPort {
                     });
             return;
         }
+        logger.info("erro ao salvar pagamento...");
         throw new InvalidArgumentException("Erro ao enviar dados para salvar no banco");
     }
 }
